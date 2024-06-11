@@ -1,18 +1,25 @@
 import React, { useEffect, useState } from "react";
 import { toggleMenu } from "../utils/appSlice";
-import { useDispatch } from "react-redux";
-import { YOUTUBE_SEARCH_API } from "../utils/constants";
+import { useDispatch, useSelector } from "react-redux";
+import { YOUTUBE_SEARCH_API, YOUTUBE_SUGGESTION_API } from "../utils/constants";
+import { cacheResults } from "../utils/searchSlice";
+import { updateVideos } from "../utils/videosSlice";
 
 const Head = () => {
   const dispatch = useDispatch();
   const [searchQuery, setSearchQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestion, setShowSuggestion] = useState(false);
+  const searchCache = useSelector((store) => store.search);
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      getSuggestions();
-    }, 2000);
+      if (searchCache[searchQuery]) {
+        setSuggestions(searchCache[searchQuery]);
+      } else {
+        getSuggestions();
+      }
+    }, 200);
 
     return () => {
       clearTimeout(timer);
@@ -22,13 +29,32 @@ const Head = () => {
   }, [searchQuery]);
 
   const getSuggestions = async () => {
-    const data = await fetch(YOUTUBE_SEARCH_API + searchQuery);
+    const data = await fetch(YOUTUBE_SUGGESTION_API + searchQuery);
     const json = await data.json();
     setSuggestions(json[1]);
+
+    dispatch(
+      cacheResults({
+        [searchQuery]: json[1],
+      })
+    );
   };
 
   const toggleSidebarhandler = () => {
     dispatch(toggleMenu());
+  };
+
+  const handleSuggestionClick = (s) => {
+    setSearchQuery(s);
+    setShowSuggestion(false);
+    handleSearch();
+  };
+
+  const handleSearch = async () => {
+    const data = await fetch(YOUTUBE_SEARCH_API + searchQuery);
+    const json = await data.json();
+    dispatch(updateVideos(json.items));
+    setShowSuggestion(false);
   };
 
   return (
@@ -52,16 +78,28 @@ const Head = () => {
             className="w-1/2 border border-gray-300 px-4 py-2 rounded-l-full"
             type="text"
             placeholder="Search"
+            value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onFocus={() => setShowSuggestion(true)}
-            onBlur={() => setShowSuggestion(false)}
+            // onBlur={() => setShowSuggestion(false)}
           />
-          <button className="p-2 bg-gray-300 rounded-r-full">Search</button>
+          <button
+            className="p-2 bg-gray-300 rounded-r-full"
+            onClick={() => handleSearch()}
+          >
+            Search
+          </button>
         </div>
         {showSuggestion && (
           <div className="fixed bg-white w-2/5 px-4 py-2">
             {suggestions?.map((s) => (
-              <p className="pt-2 hover:bg-gray-200">{s}</p>
+              <div
+                key={s}
+                className="pt-2 hover:bg-gray-200"
+                onClick={() => handleSuggestionClick(s)}
+              >
+                {s}
+              </div>
             ))}
           </div>
         )}
