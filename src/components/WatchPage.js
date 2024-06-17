@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { closemenu } from "../utils/appSlice";
 import { useSearchParams } from "react-router-dom";
 import LiveComments from "./LiveComments";
-import { addMessage } from "../utils/chatSlice";
+import { addMessage, clearMessages } from "../utils/chatSlice";
 import { generateRandomName, generateRandomText } from "../utils/helper";
 
 const WatchPage = () => {
@@ -11,9 +11,11 @@ const WatchPage = () => {
   const [SearchParams] = useSearchParams();
   const chatMessages = useSelector((store) => store.chat.messages);
   const [liveMessage, setLiveMessage] = useState("");
+  const isMenuOpen = useSelector((store) => store.app.isMenuOpen);
 
   useEffect(() => {
     dispatch(closemenu());
+    dispatch(clearMessages())
     const i = setInterval(() => {
       dispatch(
         addMessage({
@@ -43,7 +45,7 @@ const WatchPage = () => {
       <div className="p-5 flex w-full">
         <div>
           <iframe
-            width="1080"
+            width={isMenuOpen ? 900 : 1080}
             height="600"
             src={
               "https://www.youtube.com/embed/" +
@@ -57,7 +59,7 @@ const WatchPage = () => {
             allowFullScreen
           ></iframe>
         </div>
-        <div className="flex-col">
+        <div className="flex-col w-[25%]">
           <div className="flex mx-2 border border-gray-500 w-full rounded-lg h-[600px] overflow-y-scroll flex-col-reverse">
             {chatMessages?.map((c) => (
               <LiveComments name={c.name} message={c.message} />

@@ -10,8 +10,11 @@ const chatSlice = createSlice({
         state.messages.splice(25,1);
       state.messages.unshift(action.payload);
     },
+    clearMessages: (state) => {
+      state.messages = [];
+    }
   },
 });
 
-export const { addMessage } = chatSlice.actions;
+export const { addMessage, clearMessages } = chatSlice.actions;
 export default chatSlice.reducer;

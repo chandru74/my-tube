@@ -66,11 +66,11 @@ const Head = () => {
           alt="menu"
           onClick={() => toggleSidebarhandler()}
         />
-        <img
+        <a href="/"> <img
           className="h-8 mx-4"
           src="https://cdn-icons-png.flaticon.com/128/725/725300.png"
           alt="logo"
-        />
+        /></a>
       </div>
       <div className="col-span-10">
         <div>
